@@ -68,6 +68,7 @@ export REPO_NAME=${ORGANIZATION}/${REPONAME}
 export USER=$(whoami)
 export CC=${CC:-gcc}
 export PATH=~/.local/bin:/usr/local/bin:$PATH
+export BOOST_CI_CODECOV_IO_UPLOAD="skip"
 
 common_install () {
   git clone https://github.com/boostorg/boost-ci.git boost-ci-cloned --depth 1
@@ -92,8 +93,6 @@ echo '==================================> INSTALL'
 common_install
 
 echo '==================================> SCRIPT'
-
-set +e
 
 cd $BOOST_ROOT/libs/$SELF
 ci/travis/codecov.sh
@@ -157,8 +156,6 @@ echo '==================================> INSTALL (target branch)'
 common_install
 
 echo '==================================> SCRIPT'
-
-set +e
 
 cd $BOOST_ROOT/libs/$SELF
 ci/travis/codecov.sh

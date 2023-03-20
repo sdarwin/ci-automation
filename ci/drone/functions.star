@@ -972,8 +972,7 @@ def compiler_supports(compiler, version, cxx):
 # This is based on an exclude-list since we want to assume
 # new images will support caching
 def image_supports_caching(image_str, compiler_str):
-    return image_str == None or not (image_str[:19] == 'cppalliance/dronevs' or compiler_str[:6] == 's390x-')
-
+    return image_str != None and not (image_str[:19] == 'cppalliance/dronevs' or compiler_str[:6] == 's390x-')
 
 # Get list of available compiler versions in a semver range
 # - compilers_in_range('gcc >=10') -> [('gcc', '12'), ('gcc', '11'), ('gcc', '10')]

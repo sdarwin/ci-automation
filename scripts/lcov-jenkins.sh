@@ -28,62 +28,64 @@ export PATH=~/.local/bin:/usr/local/bin:$PATH
 export BOOST_CI_CODECOV_IO_UPLOAD="skip"
 
 common_install () {
-  git clone https://github.com/boostorg/boost-ci.git boost-ci-cloned --depth 1
-  cp -prf boost-ci-cloned/ci .
-  rm -rf boost-ci-cloned
-  
-  export SELF=`basename $REPO_NAME`
-  export BOOST_CI_SRC_FOLDER=$(pwd)
-  
-  . ./ci/common_install.sh
+    git clone https://github.com/boostorg/boost-ci.git boost-ci-cloned --depth 1
+    cp -prf boost-ci-cloned/ci .
+    rm -rf boost-ci-cloned
 
-  # Formatted such as "cppalliance/buffers cppalliance/http-proto" 
-  for EXTRA_LIB in ${EXTRA_BOOST_LIBRARIES}; do
-    EXTRA_LIB_REPO=`basename $EXTRA_LIB` 
-    if [ ! -d "$BOOST_ROOT/libs/${EXTRA_LIB_REPO}" ]; then
-      pushd $BOOST_ROOT/libs
-      git clone https://github.com/${EXTRA_LIB} -b $BOOST_BRANCH --depth 1
-      popd
-    fi
-  done
+    export SELF=`basename $REPO_NAME`
+    export BOOST_CI_SRC_FOLDER=$(pwd)
+
+    . ./ci/common_install.sh
+
+    # Formatted such as "cppalliance/buffers cppalliance/http-proto"
+    for EXTRA_LIB in ${EXTRA_BOOST_LIBRARIES}; do
+        EXTRA_LIB_REPO=`basename $EXTRA_LIB`
+        if [ ! -d "$BOOST_ROOT/libs/${EXTRA_LIB_REPO}" ]; then
+            pushd $BOOST_ROOT/libs
+            git clone https://github.com/${EXTRA_LIB} -b $BOOST_BRANCH --depth 1
+            popd
+        fi
+    done
 }
 
-common_install
+run_coverage_reports () {
+    common_install
+    cd $BOOST_ROOT/libs/$SELF
+    ci/travis/codecov.sh
 
-cd $BOOST_ROOT/libs/$SELF
-ci/travis/codecov.sh
+    pip3 install --user gcovr
+    cd $BOOST_CI_SRC_FOLDER
 
-pip3 install --user gcovr
-cd $BOOST_CI_SRC_FOLDER
-export PATH=/tmp/lcov/bin:$PATH
-command -v lcov
-lcov --version
-lcov --ignore-errors unused --remove coverage.info -o coverage_filtered.info '*/test/*' '*/extra/*'
+    export PATH=/tmp/lcov/bin:$PATH
+    command -v lcov
+    lcov --version
 
-# Now the tracefile is coverage_filtered.info
-genhtml --flat -o genhtml coverage_filtered.info
+    lcov --ignore-errors unused --remove coverage.info -o coverage_filtered.info '*/test/*' '*/extra/*'
 
-#########################
-#
-# gcovr
-#
-#########################
+    # Now the tracefile is coverage_filtered.info
+    genhtml --flat -o genhtml coverage_filtered.info
 
-GCOVRFILTER=".*/$REPONAME/.*"
-mkdir gcovr
-mkdir -p json
-cd ../boost-root
-gcovr -p --html-details --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --html --output $BOOST_CI_SRC_FOLDER/gcovr/index.html
-ls -al $BOOST_CI_SRC_FOLDER/gcovr
+    #########################
+    #
+    # gcovr
+    #
+    #########################
 
-gcovr -p --json-summary --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --output $BOOST_CI_SRC_FOLDER/json/summary.pr.json
-echo "Original summary"
-jq . $BOOST_CI_SRC_FOLDER/json/summary.pr.json
+    GCOVRFILTER=".*/$REPONAME/.*"
+    mkdir gcovr
+    mkdir -p json
+    cd ../boost-root
+    gcovr -p --html-details --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --html --output $BOOST_CI_SRC_FOLDER/gcovr/index.html
+    ls -al $BOOST_CI_SRC_FOLDER/gcovr
 
-gcovr -p --json --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --output $BOOST_CI_SRC_FOLDER/json/coverage.pr.json
-echo "Original coverage"
-jq . $BOOST_CI_SRC_FOLDER/json/coverage.pr.json
-echo "Original coverage done"
+    gcovr -p --json-summary --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --output $BOOST_CI_SRC_FOLDER/json/summary.json
+    jq . $BOOST_CI_SRC_FOLDER/json/summary.json
+
+    gcovr -p --json --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --output $BOOST_CI_SRC_FOLDER/json/coverage.json
+    jq . $BOOST_CI_SRC_FOLDER/json/coverage.json
+}
+
+run_coverage_reports
 
 #########################################################################
 #
@@ -108,44 +110,8 @@ export BOOST_CI_SRC_FOLDER_TARGET=$(pwd)
 
 # done with prep, now everything is the same as before
 
-common_install
+run_coverage_reports
 
-cd $BOOST_ROOT/libs/$SELF
-ci/travis/codecov.sh
-
-pip3 install --user gcovr
-cd $BOOST_CI_SRC_FOLDER
-
-export PATH=/tmp/lcov/bin:$PATH
-command -v lcov
-lcov --version
-
-lcov --ignore-errors unused --remove coverage.info -o coverage_filtered.info '*/test/*' '*/extra/*'
-
-# Now the tracefile is coverage_filtered.info
-genhtml -o genhtml coverage_filtered.info
-
-#########################
-#
-# gcovr
-#
-#########################
-
-GCOVRFILTER=".*/$REPONAME/.*"
-mkdir gcovr
-mkdir -p json
-cd ../boost-root
-gcovr -p --html-details --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --html --output $BOOST_CI_SRC_FOLDER/gcovr/index.html
-ls -al $BOOST_CI_SRC_FOLDER/gcovr
-
-gcovr -p --json-summary --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --output $BOOST_CI_SRC_FOLDER/json/summary.targetbranch.json
-echo "Target branch summary"
-jq . $BOOST_CI_SRC_FOLDER/json/summary.targetbranch.json
-
-gcovr -p --json --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --output $BOOST_CI_SRC_FOLDER/json/coverage.targetbranch.json
-echo "Target coverage"
-jq . $BOOST_CI_SRC_FOLDER/json/coverage.targetbranch.json
-echo "Target coverage done"
 # Done with building target branch. Return everything back.
 
 BOOST_CI_SRC_FOLDER=$BOOST_CI_SRC_FOLDER_ORIG
@@ -167,6 +133,5 @@ if [ ! -f "$FILE" ]; then
     curl -s -S --retry 10 -L -o $FILE $URL && chmod 755 $FILE
 fi
 
-$FILE $BOOST_CI_SRC_FOLDER_ORIG/json/summary.pr.json $BOOST_CI_SRC_FOLDER_TARGET/json/summary.targetbranch.json > gcovr/coverage_diff.txt
-
+$FILE $BOOST_CI_SRC_FOLDER_ORIG/json/summary.json $BOOST_CI_SRC_FOLDER_TARGET/json/summary.json > gcovr/coverage_diff.txt
 

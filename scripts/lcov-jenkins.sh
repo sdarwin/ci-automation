@@ -81,10 +81,10 @@ run_coverage_reports () {
     ls -al $BOOST_CI_SRC_FOLDER/gcovr
 
     gcovr -p --json-summary --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --output $BOOST_CI_SRC_FOLDER/json/summary.json
-    jq . $BOOST_CI_SRC_FOLDER/json/summary.json
+    # jq . $BOOST_CI_SRC_FOLDER/json/summary.json
 
     gcovr -p --json --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --output $BOOST_CI_SRC_FOLDER/json/coverage.json
-    jq . $BOOST_CI_SRC_FOLDER/json/coverage.json
+    # jq . $BOOST_CI_SRC_FOLDER/json/coverage.json
 }
 
 run_coverage_reports

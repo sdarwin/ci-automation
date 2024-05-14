@@ -2,6 +2,9 @@
 
 set -ex
 
+export USER=$(whoami)
+echo "USER is ${USER}"
+
 if [ -z "${REPONAME}" ]; then
         echo "Please set the env variable REPONAME"
         exit 1
@@ -20,7 +23,7 @@ sudo apt-get install -y python3-pip sudo git curl jq
 # sudo apt-get install -y libcapture-tiny-perl libdatetime-perl libdatetime-format-dateparse-perl
 sudo apt-get install -y libdatetime-format-dateparse-perl
 
-export B2_TOOLSET="gcc-9"
+export B2_TOOLSET="gcc-11"
 export LCOV_VERSION="v2.1"
 export LCOV_OPTIONS="--ignore-errors mismatch"
 

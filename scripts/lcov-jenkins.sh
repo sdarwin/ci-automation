@@ -2,9 +2,6 @@
 
 set -ex
 
-export USER=$(whoami)
-echo "USER is ${USER}"
-
 if [ -z "${REPONAME}" ]; then
         echo "Please set the env variable REPONAME"
         exit 1
@@ -14,6 +11,9 @@ if [ -z "${ORGANIZATION}" ]; then
         echo "Please set the env variable ORGANIZATION"
         exit 1
 fi
+
+# export USER=$(whoami)
+# echo "USER is ${USER}"
 
 # these packages are already installed on containers.
 sudo apt-get update

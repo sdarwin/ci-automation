@@ -16,6 +16,7 @@ fi
 sudo apt-get update
 sudo apt-get install -y python3-pip sudo git curl jq
 
+# codecov.sh installs perl packages also
 # sudo apt-get install -y libcapture-tiny-perl libdatetime-perl libdatetime-format-dateparse-perl
 sudo apt-get install -y libdatetime-format-dateparse-perl
 
@@ -27,7 +28,8 @@ export REPO_NAME=${ORGANIZATION}/${REPONAME}
 export PATH=~/.local/bin:/usr/local/bin:$PATH
 export BOOST_CI_CODECOV_IO_UPLOAD="skip"
 
-common_install () {
+run_coverage_reports () {
+
     git clone https://github.com/boostorg/boost-ci.git boost-ci-cloned --depth 1
     cp -prf boost-ci-cloned/ci .
     rm -rf boost-ci-cloned
@@ -46,10 +48,7 @@ common_install () {
             popd
         fi
     done
-}
 
-run_coverage_reports () {
-    common_install
     cd $BOOST_ROOT/libs/$SELF
     ci/travis/codecov.sh
 

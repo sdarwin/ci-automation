@@ -136,4 +136,3 @@ if [ ! -f "$FILE" ]; then
 fi
 
 $FILE $BOOST_CI_SRC_FOLDER_ORIG/json/summary.json $BOOST_CI_SRC_FOLDER_TARGET/json/summary.json > gcovr/coverage_diff.txt
-

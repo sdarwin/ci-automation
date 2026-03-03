@@ -193,13 +193,13 @@ def inject_tree_data(output_dir, tree):
 
             original = content
 
-            # Replace existing tree data if present
-            if 'window.GCOVR_TREE_DATA=' in content:
+            if 'window.GCOVR_TREE_DATA' in content:
+                # Replace existing tree data if present
                 content = re.sub(
-                    r'<script>window\.GCOVR_TREE_DATA=.*?;</script>',
-                    tree_script, content)
+                    r'<script>\s*window\.GCOVR_TREE_DATA\s*=\s*.*?;\s*</script>',
+                    tree_script, content, flags=re.DOTALL)
             elif '</body>' in content:
-                # Inject before </body> if not present
+                # First-time injection
                 content = content.replace('</body>', f'{tree_script}\n</body>')
 
             if content != original:

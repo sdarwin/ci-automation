@@ -1597,7 +1597,8 @@ body.sidebar-resizing .main-content {
   padding: 2px 3px;
 }
 
-.source-table .col-count {
+.source-table .col-count,
+.source-table .col-blockids {
   text-align: right;
   white-space: nowrap;
   width: 1%;

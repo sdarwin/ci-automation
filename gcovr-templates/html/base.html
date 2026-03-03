@@ -4,7 +4,7 @@
 
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset={{info.encoding}}"/>
-    <title>{% block html_title %}{{info.head}}{% endblock %}</title>
+    <title>{% block html_title %}{{info.head}}{% endblock %}{% if info.diff_report %} - Diff mode{% endif %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script>
       // Apply theme and font size immediately to prevent flash

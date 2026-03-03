@@ -177,9 +177,13 @@ if [ ! "$skipgcovroption" = "yes" ]; then
     cd ../boost-root
     if [ ! -d ci-automation ]; then
         git clone -b master https://github.com/cppalliance/ci-automation
+        cd ci-automation
+        git branch -vv || true
+        cd .. 
     else
         cd ci-automation
         git pull || true
+        git branch -vv || true
         cd ..
     fi
 

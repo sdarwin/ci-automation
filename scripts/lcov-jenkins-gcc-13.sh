@@ -100,8 +100,8 @@ if [ -f ${pythonvirtenvpath}/bin/activate ]; then
 fi
 
 # pip install --upgrade gcovr==8.6 || true
-# pip install --upgrade git+https://github.com/gcovr/gcovr.git@954a1b45f59cdb4ef83b7fb656093402c035bc66 || true
-pip install --upgrade git+https://github.com/Spacetown/gcovr.git@05cbbc6f769da3671a3f659ad99198bac4d62dee || true
+# pip install --upgrade git+https://github.com/Spacetown/gcovr.git@05cbbc6f769da3671a3f659ad99198bac4d62dee || true
+pip install --upgrade git+https://github.com/gcovr/gcovr.git@8dc1762283bbc30044f12e998b78e7f762e0f849 || true
 
 gcovr --version
 

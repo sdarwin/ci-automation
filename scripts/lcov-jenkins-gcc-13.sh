@@ -205,7 +205,19 @@ if [ ! "$skipgcovroption" = "yes" ]; then
     ln -sfn "$BOOST_CI_SRC_FOLDER/src" "$(pwd)/src" 2>/dev/null || true
 
     # Second pass, generate html
-    gcovr "${GCOVR_EXTRA_OPTIONS[@]}" -a "$outputlocation/coverage-fixed.json" --merge-mode-functions separate --sort uncovered-percent --html-nested --html-template-dir=ci-automation/gcovr-templates/html --html-title "$REPONAME" --merge-lines --exclude-unreachable-branches --exclude-throw-branches --exclude '.*/test/.*' --exclude '.*/extra/.*' --exclude '.*/example/.*' --exclude '.*/examples/.*' --html --output "${outputlocation}/index.html" --json-summary-pretty --json-summary "$outputlocation/summary.json"
+    gcovr "${GCOVR_EXTRA_OPTIONS[@]}" -a "$outputlocation/coverage-fixed.json" \
+    --html-nested \
+    --no-html-self-contained \
+    --html-template-dir=ci-automation/gcovr-templates/html \
+    --html-title "$REPONAME" \
+    --html \
+    --output "$outputlocation/index.html" \
+    --json-summary-pretty \
+    --json-summary "$outputlocation/summary.json"
+
+    # Second pass, generate html
+    # Let's remove many options/flags from the second pass. See above.
+    # gcovr "${GCOVR_EXTRA_OPTIONS[@]}" -a "$outputlocation/coverage-fixed.json" --merge-mode-functions separate --sort uncovered-percent --html-nested --html-template-dir=ci-automation/gcovr-templates/html --html-title "$REPONAME" --merge-lines --exclude-unreachable-branches --exclude-throw-branches --exclude '.*/test/.*' --exclude '.*/extra/.*' --exclude '.*/example/.*' --exclude '.*/examples/.*' --html --output "${outputlocation}/index.html" --json-summary-pretty --json-summary "$outputlocation/summary.json"
 
     ls -al "${outputlocation}"
 

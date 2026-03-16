@@ -90,7 +90,9 @@
         <span class="source-function-col-name{{ sortable }}{% if sortable %} sorted-ascending{% endif %}" data-sort="name">Function</span>
         <span class="source-function-col-stat{{ sortable }}" data-sort="calls">Calls</span>
         <span class="source-function-col-stat{{ sortable }}" data-sort="lines">Lines</span>
-        <span class="source-function-col-stat{{ sortable }}" data-sort="branches">Branches</span>
+        {% if has_branches %}
+        <span class="source-function-col-stat col-branches{{ sortable }}" data-sort="branches">Branches</span>
+        {% endif %}
         <span class="source-function-col-stat{{ sortable }}" data-sort="blocks">Blocks</span>
       </div>
       {% for entry in function_list | sort(attribute='line') %}
@@ -108,9 +110,11 @@
         <span class="source-function-col-stat{% if entry.excluded %} excluded{% elif entry.line_coverage is defined and entry.line_coverage == 100.0 %} cov-high{% elif entry.line_coverage is defined and entry.line_coverage > 0 %} cov-med{% else %} cov-low{% endif %}">
           {%- if entry.excluded %}&ndash;{% elif entry.line_coverage is defined %}{{ entry.line_coverage | round(1) }}%{% else %}&ndash;{% endif -%}
         </span>
-        <span class="source-function-col-stat{% if entry.excluded %} excluded{% elif entry.branch_coverage is defined and entry.branch_coverage != '-' %}{% if entry.branch_coverage == 100.0 %} cov-high{% elif entry.branch_coverage > 0 %} cov-med{% else %} cov-low{% endif %}{% endif %}">
+        {% if has_branches %}
+        <span class="source-function-col-stat col-branches{% if entry.excluded %} excluded{% elif entry.branch_coverage is defined and entry.branch_coverage != '-' %}{% if entry.branch_coverage == 100.0 %} cov-high{% elif entry.branch_coverage > 0 %} cov-med{% else %} cov-low{% endif %}{% endif %}">
           {%- if entry.excluded %}&ndash;{% elif entry.branch_coverage is defined and entry.branch_coverage != '-' %}{{ entry.branch_coverage | round(1) }}%{% else %}&ndash;{% endif -%}
         </span>
+        {% endif %}
         <span class="source-function-col-stat{% if entry.excluded %} excluded{% elif blks is not none %}{% if blks == 100.0 %} cov-high{% elif blks > 0 %} cov-med{% else %} cov-low{% endif %}{% endif %}">
           {%- if entry.excluded %}&ndash;{% elif blks is not none %}{{ blks | round(1) }}%{% else %}&ndash;{% endif -%}
         </span>

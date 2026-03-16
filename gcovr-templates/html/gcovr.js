@@ -943,6 +943,7 @@
     var data = JSON.parse(dataEl.textContent);
     var container = document.querySelector('.functions-body');
     var loadingEl = document.getElementById('functions-loading');
+    var showBranches = config.showBranches;
     var showConditions = config.showConditions;
     var singlePage = config.singlePage;
     var currentFile = config.htmlFilename || '';
@@ -1012,6 +1013,11 @@
 
       // col-lines
       row.appendChild(el('div', 'col-lines', entry.line_coverage + '%'));
+
+      // col-branches (optional)
+      if (showBranches) {
+        row.appendChild(el('div', 'col-branches', entry.branch_coverage + '%'));
+      }
 
       // col-conditions (optional)
       if (showConditions) {
@@ -1085,6 +1091,7 @@
           case 'name': aVal = a.name; bVal = b.name; break;
           case 'calls': aVal = a.excluded ? -1 : a.execution_count; bVal = b.excluded ? -1 : b.execution_count; break;
           case 'lines': aVal = parseFloat(a.line_coverage) || 0; bVal = parseFloat(b.line_coverage) || 0; break;
+          case 'branches': aVal = parseFloat(a.branch_coverage) || 0; bVal = parseFloat(b.branch_coverage) || 0; break;
           case 'conditions': aVal = parseFloat(a.condition_coverage) || 0; bVal = parseFloat(b.condition_coverage) || 0; break;
           default: aVal = a.name; bVal = b.name;
         }
@@ -2043,8 +2050,12 @@
     } catch (e) {}
 
     // Apply saved hidden columns
+    var fnList = document.querySelector('.source-functions-list');
     for (var i = 0; i < hidden.length; i++) {
       table.classList.add('hide-col-' + hidden[i]);
+      if (fnList) {
+        fnList.classList.add('hide-col-' + hidden[i]);
+      }
     }
 
     // Update button appearance to match state
@@ -2062,6 +2073,12 @@
         var hideClass = 'hide-col-' + col;
         var isHidden = table.classList.toggle(hideClass);
         this.classList.toggle('show-col', !isHidden);
+
+        // Sync with function list sidebar
+        var fnList = document.querySelector('.source-functions-list');
+        if (fnList) {
+          fnList.classList.toggle(hideClass, isHidden);
+        }
 
         // Save state
         var current = [];

@@ -26,6 +26,7 @@
     initPopupResize();
     initFileNavTooltips();
     initFileNavKeys();
+    initFunctionListPersistence();
 
     // Reveal page now that all init is done
     document.documentElement.classList.remove('no-transitions');
@@ -1156,51 +1157,69 @@
   // ===========================================
 
   function initSorting() {
-    const headers = document.querySelectorAll('.file-list-header .sortable, .functions-header .sortable');
+    var headerSets = [
+      {
+        selector: '.file-list-header .sortable, .functions-header .sortable',
+        getContainer: function() {
+          return document.getElementById('file-list') || document.querySelector('.functions-body');
+        },
+        defaultSort: { key: 'filename', ascending: true }
+      },
+      {
+        selector: '.source-function-header .sortable',
+        getContainer: function() {
+          return document.querySelector('.source-functions-list');
+        },
+        defaultSort: null
+      }
+    ];
 
-    headers.forEach(function(header) {
-      header.addEventListener('click', function() {
-        const sortKey = this.dataset.sort;
-        const isAscending = this.classList.contains('sorted-ascending');
+    headerSets.forEach(function(set) {
+      var headers = document.querySelectorAll(set.selector);
+      if (!headers.length) return;
 
-        // Remove sorted class from all headers
-        headers.forEach(function(h) {
-          h.classList.remove('sorted-ascending', 'sorted-descending');
+      headers.forEach(function(header) {
+        header.addEventListener('click', function() {
+          var sortKey = this.dataset.sort;
+          var isAscending = this.classList.contains('sorted-ascending');
+
+          headers.forEach(function(h) {
+            h.classList.remove('sorted-ascending', 'sorted-descending');
+          });
+
+          this.classList.add(isAscending ? 'sorted-descending' : 'sorted-ascending');
+
+          sortList(set.getContainer(), sortKey, !isAscending);
         });
-
-        // Toggle sort direction
-        this.classList.add(isAscending ? 'sorted-descending' : 'sorted-ascending');
-
-        // Sort the list
-        sortList(sortKey, !isAscending);
       });
-    });
 
-    // Initial sort: directories first, then by filename
-    sortList('filename', true);
+      if (set.defaultSort) {
+        sortList(set.getContainer(), set.defaultSort.key, set.defaultSort.ascending);
+      }
+    });
   }
 
-  function sortList(key, ascending) {
-    const container = document.getElementById('file-list') || document.querySelector('.functions-body');
+  function sortList(container, key, ascending) {
     if (!container) return;
     // Virtual scroll handles its own sorting
     if (container.dataset.virtualScroll) return;
 
-    const rows = Array.from(container.children);
+    var headerEl = container.querySelector('.source-function-header, .file-list-header, .functions-header');
+    var rows = Array.from(container.children).filter(function(el) { return el !== headerEl; });
 
     rows.sort(function(a, b) {
       // Directories always come first
-      const aIsDir = a.classList.contains('directory');
-      const bIsDir = b.classList.contains('directory');
+      var aIsDir = a.classList.contains('directory');
+      var bIsDir = b.classList.contains('directory');
       if (aIsDir && !bIsDir) return -1;
       if (!aIsDir && bIsDir) return 1;
 
-      let aVal = a.dataset[key] || a.querySelector('[data-sort]')?.dataset.sort || '';
-      let bVal = b.dataset[key] || b.querySelector('[data-sort]')?.dataset.sort || '';
+      var aVal = a.dataset[key] || a.querySelector('[data-sort]')?.dataset.sort || '';
+      var bVal = b.dataset[key] || b.querySelector('[data-sort]')?.dataset.sort || '';
 
       // Try to parse as numbers
-      const aNum = parseFloat(aVal);
-      const bNum = parseFloat(bVal);
+      var aNum = parseFloat(aVal);
+      var bNum = parseFloat(bVal);
 
       if (!isNaN(aNum) && !isNaN(bNum)) {
         return ascending ? aNum - bNum : bNum - aNum;
@@ -1633,7 +1652,7 @@
       localStorage.setItem('gcovr-view-mode', 'nested');
 
       // Re-run sorting to maintain state
-      sortList('filename', true);
+      sortList(document.getElementById('file-list') || document.querySelector('.functions-body'), 'filename', true);
     }
 
     buttons.forEach(function(btn) {
@@ -1922,7 +1941,7 @@
           if (scrollBox && row) {
             var thead = scrollBox.querySelector('thead');
             var theadHeight = thead ? thead.offsetHeight : 0;
-            scrollBox.scrollTo({ top: row.offsetTop - theadHeight - 8, behavior: 'smooth' });
+            scrollBox.scrollTo({ top: row.offsetTop - theadHeight - 8, behavior: 'instant' });
           }
           history.replaceState(null, '', this.getAttribute('href'));
           // Highlight the target row (clear any previous highlight first)
@@ -1940,13 +1959,20 @@
   // ===========================================
 
   function initLineHighlight() {
+    var clickedFnItem = null;
+
     function highlightFromHash(scroll) {
       var prev = document.querySelector('.highlight-target');
       if (prev) prev.classList.remove('highlight-target');
+      var prevFn = document.querySelector('.source-function-item.selected');
+      if (prevFn) prevFn.classList.remove('selected');
       var id = window.location.hash.slice(1);
       if (!id) return;
       var el = document.getElementById(id);
       if (!el) return;
+      var fnItem = clickedFnItem || document.querySelector('.source-function-item[href="#' + id + '"]');
+      clickedFnItem = null;
+      if (fnItem) fnItem.classList.add('selected');
       var row = el.closest('tr');
       if (row) {
         row.classList.add('highlight-target');
@@ -1955,12 +1981,26 @@
           if (scrollBox) {
             var thead = scrollBox.querySelector('thead');
             var theadHeight = thead ? thead.offsetHeight : 0;
-            scrollBox.scrollTo({ top: row.offsetTop - theadHeight - 8, behavior: 'smooth' });
+            scrollBox.scrollTo({ top: row.offsetTop - theadHeight - 8, behavior: 'instant' });
           } else {
             row.scrollIntoView({ block: 'center' });
           }
         }
       }
+    }
+
+    // Handle clicks on function list items directly
+    var fnList = document.querySelector('.source-functions-list');
+    if (fnList) {
+      fnList.addEventListener('click', function(e) {
+        var item = e.target.closest('.source-function-item');
+        if (!item) return;
+        e.preventDefault();
+        clickedFnItem = item;
+        var href = item.getAttribute('href');
+        if (href) history.replaceState(null, '', href);
+        highlightFromHash(true);
+      });
     }
 
     // Event delegation: single listener on the table container
@@ -2116,6 +2156,20 @@
       prefetchLink.rel = 'prefetch';
       prefetchLink.href = href;
       document.head.appendChild(prefetchLink);
+    });
+  }
+
+  function initFunctionListPersistence() {
+    var details = document.querySelector('details.source-functions');
+    if (!details) return;
+
+    var key = 'gcovr-fn-list-open';
+    if (sessionStorage.getItem(key) === 'true') {
+      details.setAttribute('open', '');
+    }
+
+    details.addEventListener('toggle', function() {
+      sessionStorage.setItem(key, details.open ? 'true' : 'false');
     });
   }
 

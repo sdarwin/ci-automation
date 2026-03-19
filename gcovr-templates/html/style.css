@@ -876,6 +876,15 @@ body.sidebar-resizing .main-content {
   height: var(--header-height);
 }
 
+/* On source pages, scroll everything (header, summary) and stick the source toolbar */
+.main-content:has(.source-container) {
+  overflow-y: auto;
+}
+
+.main-content:has(.source-container) .main-header {
+  position: static;
+}
+
 
 .breadcrumb {
   display: flex;
@@ -953,11 +962,8 @@ body.sidebar-resizing .main-content {
 }
 
 .main-section {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
 }
 
 .main-footer {
@@ -1475,11 +1481,8 @@ body.sidebar-resizing .main-content {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  overflow: clip;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
 }
 
 .source-header {
@@ -1491,6 +1494,20 @@ body.sidebar-resizing .main-content {
   flex-wrap: wrap;
   gap: 8px;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.source-header-filename {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .source-title {
@@ -1774,10 +1791,9 @@ tr.source-line.nav-highlight > td {
 }
 
 .source-table-container {
-  overflow: auto;
+  overflow-x: auto;
   max-width: 100%;
-  flex: 1;
-  min-height: 0;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
 .source-table {

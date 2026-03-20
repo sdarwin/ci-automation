@@ -206,6 +206,7 @@ if [ ! "$skipgcovroption" = "yes" ]; then
 
     # Second pass, generate html
     gcovr "${GCOVR_EXTRA_OPTIONS[@]}" -a "$outputlocation/coverage-fixed.json" \
+    --merge-mode-functions separate \
     --html-nested \
     --no-html-self-contained \
     --html-template-dir=ci-automation/gcovr-templates/html \

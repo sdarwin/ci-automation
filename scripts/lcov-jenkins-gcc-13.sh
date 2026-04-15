@@ -209,12 +209,13 @@ if [ ! "$skipgcovroption" = "yes" ]; then
     --merge-mode-functions separate \
     --html-nested \
     --no-html-self-contained \
-    --html-template-dir=ci-automation/gcovr-templates/html \
     --html-title "$REPONAME" \
     --html \
     --output "$outputlocation/index.html" \
     --json-summary-pretty \
     --json-summary "$outputlocation/summary.json"
+    
+    # testing without: --html-template-dir=ci-automation/gcovr-templates/html \
 
     # Second pass, generate html
     # Let's remove many options/flags from the second pass. See above.

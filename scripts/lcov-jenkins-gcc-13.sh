@@ -205,7 +205,7 @@ if [ ! "$skipgcovroption" = "yes" ]; then
     ln -sfn "$BOOST_CI_SRC_FOLDER/src" "$(pwd)/src" 2>/dev/null || true
 
     # Second pass, generate html
-    gcovr "${GCOVR_EXTRA_OPTIONS[@]}" -a "$outputlocation/coverage-fixed.json" \
+    gcovr "${GCOVR_EXTRA_OPTIONS[@]}" -a "$outputlocation/coverage-raw.json" \
     --merge-mode-functions separate \
     --html-nested \
     --no-html-self-contained \

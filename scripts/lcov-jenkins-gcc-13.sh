@@ -178,7 +178,7 @@ if [ ! "$skipgcovroption" = "yes" ]; then
     mkdir gcovr
     cd ../boost-root
     if [ ! -d ci-automation ]; then
-        git clone -b master https://github.com/cppalliance/ci-automation
+        git clone -b testing https://github.com/sdarwin/ci-automation
         cd ci-automation
         git branch -vv || true
         cd .. 

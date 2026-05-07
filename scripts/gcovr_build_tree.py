@@ -107,15 +107,23 @@ def get_coverage_class(coverage):
 
 
 def clean_name(raw_name):
-    """Extract the leaf name from a possibly relative path."""
+    """Keep a stable relative path for tree normalization."""
     if not raw_name:
         return raw_name
     cleaned = raw_name
     while cleaned.startswith('../') or cleaned.startswith('./'):
         cleaned = cleaned[3:] if cleaned.startswith('../') else cleaned[2:]
-    if '/' in cleaned:
-        cleaned = cleaned.rsplit('/', 1)[-1]
     return cleaned or raw_name
+
+
+def normalize_link(href):
+    """Normalize a link so it can match parsed HTML filenames."""
+    if not href:
+        return href
+    link = href.strip()
+    while link.startswith('./'):
+        link = link[2:]
+    return link
 
 
 def build_tree(output_dir):
@@ -146,7 +154,7 @@ def build_tree(output_dir):
             name = clean_name(entry['name'])
             is_dir = entry['is_dir'] or '.' not in name
             coverage = entry['coverage']
-            link = entry['link']
+            link = normalize_link(entry['link'])
 
             node = {
                 'name': name,

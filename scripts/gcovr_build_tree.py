@@ -107,14 +107,16 @@ def get_coverage_class(coverage):
 
 
 def clean_name(raw_name):
-    """Extract the leaf name from a possibly relative path."""
+    """Strip leading relative-path prefixes (./ and ../) but preserve the rest of the path.
+
+    Multi-segment names like 'boost/url/url_view.hpp' are kept intact so the
+    JS side (normalizeTree) can build a proper nested directory structure.
+    """
     if not raw_name:
         return raw_name
     cleaned = raw_name
     while cleaned.startswith('../') or cleaned.startswith('./'):
         cleaned = cleaned[3:] if cleaned.startswith('../') else cleaned[2:]
-    if '/' in cleaned:
-        cleaned = cleaned.rsplit('/', 1)[-1]
     return cleaned or raw_name
 
 

@@ -402,7 +402,6 @@
     if (window.GCOVR_TREE_DATA) {
       window.GCOVR_TREE_DATA = normalizeTree(window.GCOVR_TREE_DATA);
       deduplicateTree(window.GCOVR_TREE_DATA);
-      collapseSingleChildDirs(window.GCOVR_TREE_DATA);
       deduplicateTree(window.GCOVR_TREE_DATA);
       renderTree(treeContainer, window.GCOVR_TREE_DATA);
       return;
@@ -417,7 +416,6 @@
       .then(function(tree) {
         window.GCOVR_TREE_DATA = normalizeTree(tree);
         deduplicateTree(window.GCOVR_TREE_DATA);
-        collapseSingleChildDirs(window.GCOVR_TREE_DATA);
         deduplicateTree(window.GCOVR_TREE_DATA);
         renderTree(treeContainer, window.GCOVR_TREE_DATA);
         // Re-run dependent init now that the tree exists
@@ -429,24 +427,6 @@
         console.log('tree.json not found, using static sidebar');
         // Keep existing static content from Jinja template
       });
-  }
-
-  // cspell:ignore capy
-  // Collapse single-child directory chains: if a directory has exactly
-  // one child and that child is also a directory, absorb the grandchildren.
-  // e.g. include > boost > capy > [items] becomes include > [items]
-  function collapseSingleChildDirs(nodes) {
-    for (var i = 0; i < nodes.length; i++) {
-      var node = nodes[i];
-      if (!node.isDirectory || !node.children) continue;
-      while (node.children.length === 1 && node.children[0].isDirectory &&
-             node.children[0].children && node.children[0].children.length > 0) {
-        var child = node.children[0];
-        if (!node.link && child.link) node.link = child.link;
-        node.children = child.children;
-      }
-      collapseSingleChildDirs(node.children);
-    }
   }
 
   // Deduplicate tree: when a node has a child with the same name

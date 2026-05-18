@@ -414,9 +414,10 @@
     var treeContainer = document.getElementById('file-tree');
     if (!treeContainer) return;
 
-    // Check for embedded tree data first (works for local file:// access)
+    // Tree data is produced already-normalized and already-sorted by the
+    // upstream tooling (Python's gcovr_build_tree.py or gcovr itself), so
+    // no normalize/sort pass is needed here. We still dedupe + join chains.
     if (window.GCOVR_TREE_DATA) {
-      window.GCOVR_TREE_DATA = normalizeTree(window.GCOVR_TREE_DATA);
       deduplicateTree(window.GCOVR_TREE_DATA);
       deduplicateTree(window.GCOVR_TREE_DATA);
       joinSingleChildDirs(window.GCOVR_TREE_DATA);
@@ -432,7 +433,7 @@
         return response.json();
       })
       .then(function(tree) {
-        window.GCOVR_TREE_DATA = normalizeTree(tree);
+        window.GCOVR_TREE_DATA = tree;
         deduplicateTree(window.GCOVR_TREE_DATA);
         deduplicateTree(window.GCOVR_TREE_DATA);
         joinSingleChildDirs(window.GCOVR_TREE_DATA);
@@ -531,74 +532,6 @@
       }
       joinSingleChildDirs(node.children);
     }
-  }
-
-  // Normalize tree: expand multi-segment node names (e.g. "capy/buffers")
-  // into proper nested directory structures so the tree and breadcrumbs
-  // display correctly.
-  function normalizeTree(nodes) {
-    if (!nodes || nodes.length === 0) return nodes;
-
-    var groups = {};
-    var order = [];
-
-    for (var i = 0; i < nodes.length; i++) {
-      var node = nodes[i];
-      var slashIdx = node.name.indexOf('/');
-
-      if (slashIdx === -1) {
-        // Simple name — add directly or merge with existing group
-        if (groups[node.name]) {
-          var existing = groups[node.name];
-          if (node.link) existing.link = node.link;
-          if (node.coverage) existing.coverage = node.coverage;
-          if (node.coverageClass) existing.coverageClass = node.coverageClass;
-          if (node.children && node.children.length > 0) {
-            existing.children = (existing.children || []).concat(node.children);
-          }
-        } else {
-          var copy = {};
-          for (var key in node) {
-            if (node.hasOwnProperty(key)) copy[key] = node[key];
-          }
-          groups[node.name] = copy;
-          order.push(node.name);
-        }
-      } else {
-        // Multi-segment name — split on first '/' and group
-        var prefix = node.name.substring(0, slashIdx);
-        var rest = node.name.substring(slashIdx + 1);
-
-        if (!groups[prefix]) {
-          groups[prefix] = {
-            name: prefix,
-            isDirectory: true,
-            children: []
-          };
-          order.push(prefix);
-        }
-        if (!groups[prefix].children) groups[prefix].children = [];
-
-        // Create child node with remaining path as name
-        var childNode = {};
-        for (var key in node) {
-          if (node.hasOwnProperty(key)) childNode[key] = node[key];
-        }
-        childNode.name = rest;
-        groups[prefix].children.push(childNode);
-      }
-    }
-
-    // Build result with recursive normalization
-    var result = [];
-    for (var i = 0; i < order.length; i++) {
-      var node = groups[order[i]];
-      if (node.children && node.children.length > 0) {
-        node.children = normalizeTree(node.children);
-      }
-      result.push(node);
-    }
-    return result;
   }
 
   // Save expanded folder paths to localStorage
@@ -2250,3 +2183,5 @@
   }
 
 })();
+
+window.GCOVR_TREE_DATA = {{ GCOVR_TREE_DATA | default([]) | tojson(2) | safe }};

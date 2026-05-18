@@ -78,6 +78,22 @@
     var fragment = document.createDocumentFragment();
     var matchedSegments = [];
 
+    // Fill an element with the segments of a (possibly joined) name like
+    // "boost/url", rendering "boost", a separator, "url". Used so a joined
+    // directory shows its segments inline yet remains one hyperlink target.
+    function appendSegments(parentEl, name) {
+      var segments = name.split('/');
+      for (var k = 0; k < segments.length; k++) {
+        if (k > 0) {
+          var inner = document.createElement('span');
+          inner.className = 'separator';
+          inner.textContent = '/';
+          parentEl.appendChild(inner);
+        }
+        parentEl.appendChild(document.createTextNode(segments[k]));
+      }
+    }
+
     for (var i = 0; i < treePath.length; i++) {
       var node = treePath[i];
       var isLast = (i === treePath.length - 1);
@@ -94,12 +110,12 @@
       if (node.link && !isLast) {
         var a = document.createElement('a');
         a.href = node.link;
-        a.textContent = node.name;
+        appendSegments(a, node.name);
         fragment.appendChild(a);
       } else {
         var span = document.createElement('span');
         span.className = 'current-file';
-        span.textContent = node.name;
+        appendSegments(span, node.name);
         fragment.appendChild(span);
       }
     }
@@ -403,6 +419,7 @@
       window.GCOVR_TREE_DATA = normalizeTree(window.GCOVR_TREE_DATA);
       deduplicateTree(window.GCOVR_TREE_DATA);
       deduplicateTree(window.GCOVR_TREE_DATA);
+      joinSingleChildDirs(window.GCOVR_TREE_DATA);
       renderTree(treeContainer, window.GCOVR_TREE_DATA);
       return;
     }
@@ -417,6 +434,7 @@
         window.GCOVR_TREE_DATA = normalizeTree(tree);
         deduplicateTree(window.GCOVR_TREE_DATA);
         deduplicateTree(window.GCOVR_TREE_DATA);
+        joinSingleChildDirs(window.GCOVR_TREE_DATA);
         renderTree(treeContainer, window.GCOVR_TREE_DATA);
         // Re-run dependent init now that the tree exists
         initNavOverride();
@@ -452,6 +470,41 @@
         }
       }
       deduplicateTree(node.children);
+    }
+  }
+
+  // Join chains of single-child directories into one sidebar entry.
+  // If a directory contains nothing but one child directory, the two are
+  // merged: the name becomes "parent/child", and the link + stats are taken
+  // from the (deepest) child. The grandchildren become the new children.
+  // Repeats until the chain ends (multiple children, or a file appears).
+  // Result: e.g. include > boost > url > [files] becomes include/boost/url
+  // as a single entry whose click navigates straight to the url directory.
+  function joinSingleChildDirs(nodes) {
+    if (!nodes) return;
+    var statKeys = ['linesTotal', 'linesExec', 'linesCoverage', 'linesClass',
+                    'functionsCoverage', 'functionsClass',
+                    'branchesCoverage', 'branchesClass'];
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (!node.isDirectory || !node.children) continue;
+      while (node.children.length === 1 && node.children[0].isDirectory) {
+        var child = node.children[0];
+        node.name = node.name + '/' + child.name;
+        // The joined entry represents the deepest directory for clicks
+        // and for the coverage stats shown next to it.
+        if (child.link) node.link = child.link;
+        if (child.coverage) node.coverage = child.coverage;
+        if (child.coverageClass) node.coverageClass = child.coverageClass;
+        for (var k = 0; k < statKeys.length; k++) {
+          var key = statKeys[k];
+          if (child[key] !== undefined && child[key] !== '') {
+            node[key] = child[key];
+          }
+        }
+        node.children = child.children || [];
+      }
+      joinSingleChildDirs(node.children);
     }
   }
 
@@ -677,8 +730,9 @@
     header.appendChild(icon);
 
     // Label (with link if available)
-    // Clean the display name to remove relative path prefixes like '../../../'
-    var displayName = getDisplayName(item.name);
+    // Use the full cleaned name so joined-dir entries like "boost/url"
+    // display as a single multi-segment label in the sidebar.
+    var displayName = cleanPathName(item.name);
     var tooltipText = cleanPathName(item.fullPath || item.name);
     var label = document.createElement('span');
     label.className = 'tree-label';

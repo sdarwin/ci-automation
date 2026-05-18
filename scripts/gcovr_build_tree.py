@@ -274,19 +274,22 @@ def build_tree(output_dir):
 
 
 def inject_tree_data(output_dir, tree):
-    """Inject tree data into the gcovr.js placeholder line.
+    """Inject tree data into the generated JS file's placeholder line.
 
-    gcovr.js contains a final line of the form
+    The JS file contains a final line of the form
         window.GCOVR_TREE_DATA = ...;
     (either an empty default from the Jinja template, or a previously
     injected value). We replace that single assignment with the real tree.
     Doing this in one shared .js file rather than inline in every .html
     page avoids duplicating the tree JSON across hundreds of HTML files.
+
+    Note: gcovr renames the template file `gcovr.js` to `index.js` in the
+    output directory, so that's what we target here.
     """
     output_path = Path(output_dir)
-    js_file = output_path / 'gcovr.js'
+    js_file = output_path / 'index.js'
     if not js_file.exists():
-        print(f"Warning: gcovr.js not found at {js_file}", file=sys.stderr)
+        print(f"Warning: index.js not found at {js_file}", file=sys.stderr)
         return 0
 
     new_assignment = f'window.GCOVR_TREE_DATA = {json.dumps(tree)};'
@@ -341,12 +344,12 @@ def main():
 
     print(f"Generated {tree_file} with {len(tree)} root entries")
 
-    # Inject tree data into the gcovr.js placeholder
+    # Inject tree data into the generated index.js placeholder
     injected = inject_tree_data(output_dir, tree)
     if injected:
-        print(f"Injected tree data into {output_dir}/gcovr.js")
+        print(f"Injected tree data into {output_dir}/index.js")
     else:
-        print("Warning: tree data was not injected into gcovr.js", file=sys.stderr)
+        print("Warning: tree data was not injected into index.js", file=sys.stderr)
 
 
 if __name__ == '__main__':

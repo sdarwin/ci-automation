@@ -417,37 +417,10 @@
     // Tree data is produced already-normalized and already-sorted by the
     // upstream tooling (Python's gcovr_build_tree.py or gcovr itself), so
     // no normalize/sort pass is needed here. We still dedupe + join chains.
-    if (window.GCOVR_TREE_DATA) {
-      deduplicateTree(window.GCOVR_TREE_DATA);
       deduplicateTree(window.GCOVR_TREE_DATA);
       joinSingleChildDirs(window.GCOVR_TREE_DATA);
       sortTree(window.GCOVR_TREE_DATA);
       renderTree(treeContainer, window.GCOVR_TREE_DATA);
-      return;
-    }
-
-    // Fallback: try to load tree.json for full hierarchy
-    fetch('tree.json')
-      .then(function(response) {
-        if (!response.ok) throw new Error('No tree.json');
-        return response.json();
-      })
-      .then(function(tree) {
-        window.GCOVR_TREE_DATA = tree;
-        deduplicateTree(window.GCOVR_TREE_DATA);
-        deduplicateTree(window.GCOVR_TREE_DATA);
-        joinSingleChildDirs(window.GCOVR_TREE_DATA);
-        sortTree(window.GCOVR_TREE_DATA);
-        renderTree(treeContainer, window.GCOVR_TREE_DATA);
-        // Re-run dependent init now that the tree exists
-        initNavOverride();
-        initBreadcrumbs();
-        initSearch();
-      })
-      .catch(function(err) {
-        console.log('tree.json not found, using static sidebar');
-        // Keep existing static content from Jinja template
-      });
   }
 
   // Deduplicate tree: when a node has a child with the same name

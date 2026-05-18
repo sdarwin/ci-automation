@@ -420,6 +420,7 @@
       deduplicateTree(window.GCOVR_TREE_DATA);
       deduplicateTree(window.GCOVR_TREE_DATA);
       joinSingleChildDirs(window.GCOVR_TREE_DATA);
+      sortTree(window.GCOVR_TREE_DATA);
       renderTree(treeContainer, window.GCOVR_TREE_DATA);
       return;
     }
@@ -435,6 +436,7 @@
         deduplicateTree(window.GCOVR_TREE_DATA);
         deduplicateTree(window.GCOVR_TREE_DATA);
         joinSingleChildDirs(window.GCOVR_TREE_DATA);
+        sortTree(window.GCOVR_TREE_DATA);
         renderTree(treeContainer, window.GCOVR_TREE_DATA);
         // Re-run dependent init now that the tree exists
         initNavOverride();
@@ -470,6 +472,29 @@
         }
       }
       deduplicateTree(node.children);
+    }
+  }
+
+  // Re-sort the tree: directories first, then files, alphabetically within
+  // each group. Python already sorts each level, but normalizeTree creates
+  // synthetic directory nodes from multi-segment FILE entries (e.g. a deep
+  // chain like subdir1/subdir2/subdir3/file.hpp that gcovr itself collapsed).
+  // Those synthetic dirs end up wherever the originating file landed in the
+  // Python sort — i.e. in the file bucket — so without this pass they appear
+  // mixed in with the files instead of at the top with the other directories.
+  function sortTree(nodes) {
+    if (!nodes || nodes.length === 0) return;
+    nodes.sort(function(a, b) {
+      var aIsDir = a.isDirectory || (a.children && a.children.length > 0);
+      var bIsDir = b.isDirectory || (b.children && b.children.length > 0);
+      if (aIsDir && !bIsDir) return -1;
+      if (!aIsDir && bIsDir) return 1;
+      var aName = (a.name || '').toLowerCase();
+      var bName = (b.name || '').toLowerCase();
+      return aName.localeCompare(bName);
+    });
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].children) sortTree(nodes[i].children);
     }
   }
 
